@@ -2,10 +2,11 @@ import discord
 from discord.ext import commands
 import logging
 from dotenv import load_dotenv
-import os 
+import os
+from weather import minutely_15_dataframe, hourly_dataframe
 
 # update
-# find an outside source to pull weather
+# pick the weather results to add
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -28,6 +29,9 @@ async def on_message(message):
 
 	if message.content.startswith('$hello'):
 		await message.channel.send('Balls')
+	if message.content.startswith('$weather'):
+		await message.channel.send(f'Weather: {hourly_dataframe}')
+
 
 client.run(token)
 

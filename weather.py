@@ -13,10 +13,10 @@ url = "https://api.open-meteo.com/v1/forecast"
 params = {
 	"latitude": 44.7677,
 	"longitude": 93.2777,
-	"daily": ["weather_code", "wind_speed_10m_max"],
-	"hourly": "temperature_2m",
+	"hourly": ["temperature_2m", "weather_code"],
 	"models": "gfs_global",
 	"current": "temperature_2m",
+	"timezone": "America/Chicago",
 	"minutely_15": "precipitation",
 	"temperature_unit": "fahrenheit",
 
@@ -56,6 +56,7 @@ print(minutely_15_dataframe)
 # Process hourly data. The order of variables needs to be the same as requested.
 hourly = response.Hourly()
 hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
+hourly_weather_code = hourly.Variables(1).ValuesAsNumpy()
 
 hourly_data = {"date": pd.date_range(
 	start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
@@ -65,24 +66,9 @@ hourly_data = {"date": pd.date_range(
 )}
 
 hourly_data["temperature_2m"] = hourly_temperature_2m
+hourly_data["weather_code"] = hourly_weather_code
 
 hourly_dataframe = pd.DataFrame(data = hourly_data)
 print(hourly_dataframe)
 
-# Process daily data. The order of variables needs to be the same as requested.
-daily = response.Daily()
-daily_weather_code = daily.Variables(0).ValuesAsNumpy()
-daily_wind_speed_10m_max = daily.Variables(1).ValuesAsNumpy()
-
-daily_data = {"date": pd.date_range(
-	start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
-	end = pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
-	freq = pd.Timedelta(seconds = daily.Interval()),
-	inclusive = "left"
-)}
-
-daily_data["weather_code"] = daily_weather_code
-daily_data["wind_speed_10m_max"] = daily_wind_speed_10m_max
-
-daily_dataframe = pd.DataFrame(data = daily_data)
-print(daily_dataframe)
+# look at weather code

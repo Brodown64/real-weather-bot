@@ -3,10 +3,10 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-from weather import minutely_15_dataframe, hourly_dataframe
+from weather import current_temperature_2m, minutely_15_dataframe, hourly_dataframe, hourly_temperature_2m, hourly, hourly_data, hourly_weather_code
 
 # update
-# pick the weather results to add
+# if current_temp > 50, then "get ur ass outside lmao"
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -30,7 +30,7 @@ async def on_message(message):
 	if message.content.startswith('$hello'):
 		await message.channel.send('Balls')
 	if message.content.startswith('$weather'):
-		await message.channel.send(f'Weather: {hourly_dataframe}')
+		await message.channel.send(f'Weather: {current_temperature_2m}')
 
 
 client.run(token)

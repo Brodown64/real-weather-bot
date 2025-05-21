@@ -12,7 +12,7 @@ openmeteo = openmeteo_requests.Client(session = retry_session)
 url = "https://api.open-meteo.com/v1/forecast"
 params = {
 	"latitude": 44.7677,
-	"longitude": 93.2777,
+	"longitude": -93.2777,
 	"hourly": ["temperature_2m", "weather_code"],
 	"models": "gfs_global",
 	"current": "temperature_2m",

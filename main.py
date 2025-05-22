@@ -3,10 +3,12 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
+import random
 from weather import current_temperature_2m, minutely_15_dataframe, hourly_dataframe, hourly_temperature_2m, hourly, hourly_data, hourly_weather_code
 
 # update
-# if current_temp > 50, then "get ur ass outside lmao"
+# prompt ideas: "I rather live in New Jersey bossman 😭🙏"
+# on typing event: GET OFF DISCORD DAWG GO OUTSIDE, the wii take a break image
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -20,9 +22,19 @@ client = discord.Client(intents=intents)
 
 a = 20
 b = 60
+c = 80
+d = 110
+e = 0 
+f = 40
 
 minimum = min(a, b)
 maximum = max(a, b)
+
+min2 = min(c, d)
+max2 = max(c, d)
+
+min3 = min(e, a)
+max3 = max(e, a)
 
 @client.event
 async def on_ready():
@@ -39,19 +51,23 @@ async def on_message(message):
 		await message.channel.send(f'Weather: {current_temperature_2m}')
 	if message.content.startswith('$comment'):
 		if minimum < current_temperature_2m < maximum:
-			await message.channel.send(f'{current_temperature_2m}? Thats light stop crying bitch enjoy the windchill.')
+			msg_list = ["Thats light stop crying bitch enjoy the windchill.", "Ooooh shiver me timbers shut up man."]
+			await message.channel.send(f'{current_temperature_2m}?')
+			await message.channel.send(random.choice(msg_list))
 			# write an error message here
+		if min2 < current_temperature_2m < max2:
+			await message.channel.send(f'They must have sent you to the 8th layer of hell with king von holy shit.')
+		if min3 < current_temperature_2m < max3:
+			await message.channel.send(f'Back in my day me and your mom used to fight 5 lions on our way to school in this weather')
 
-
-		# if message.content.startswith('$comment'):
-	 #   if current_temperature_2m < 20:
-	 #   	await message.channel.send(f'{current_temperature_2m}? Thats light stop crying bitch enjoy the windchill.')
-	 #   if current_temperature_2m < 50:
-	 #   	await message.channel.send(f'{current_temperature_2m}? The woke mob will tel you a sweater is needed, but I don"t buy it')
-	 #   if current_temperature_2m < 80:
-	 #   	await message.channel.send(f'{current_temperature_2m}? Zamn that is scorching')
+		# if minimum < current_temperature_2m < maximum:
+		# 	await message.channel.send(f'{current_temperature_2m}? Thats light stop crying bitch enjoy the windchill.')
+		# 	# write an error message here
+		# if min2 < current_temperature_2m < max2:
+		# 	await message.channel.send(f'They must have sent you to the 8th layer of hell with king von holy shit.')
+		# if min3 < current_temperature_2m < max3:
+		# 	await message.channel.send(f'Back in my day me and your mom used to fight 5 lions on our way to school in this weather')
 
 
 
 client.run(token)
-

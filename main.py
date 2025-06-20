@@ -1,3 +1,5 @@
+latest_weather_data = {} 
+
 import discord
 from discord.ext import commands
 import logging
@@ -11,7 +13,6 @@ from libcst import parse_expression
 import libcst.matchers as m
 
 # update
-# find a new way to change weather cuz this is too hard lmao
 # prompt ideas: "I rather live in New Jersey bossman 😭🙏"
 # on typing event: GET OFF DISCORD DAWG GO OUTSIDE, HURRY UP AND LEAVE DAMN, STOP WRITING AN ESSAY, the wii take a break image
 # facts about weather, post history on weather disasters
@@ -89,6 +90,7 @@ async def on_ready():
 @client.event
 
 async def on_message(message):
+    global latest_weather_data
     if message.author == client.user:
         return
 
@@ -109,83 +111,88 @@ async def on_message(message):
                 await message.channel.send("You need to enter exactly two numbers.")
                 return
 
+            num1 = float(parts[0])
+            num2 = float(parts[1])
+            await message.channel.send(f"You entered: `{num1}` and `{num2}`")
+
+            with open("weather.py", "r") as f:
+                code = f.read()
+            
+# Parse, transform, and write back
+            module = cst.parse_module(code)
+            transformer = ParamUpdater(num1, num2)
+            updated_module = module.visit(transformer)
+
+            if transformer.modified:
+                with open("weather.py", "w") as f:
+                    f.write(updated_module.code)
+                print("weather.py successfully updated.")
+            else:
+                print("No changes made to weather.py.")
+                # STEP 2: Re-fetch using updated coordinates
             import openmeteo_requests
             import requests_cache
             from retry_requests import retry
 
-            session = retry(requests_cache.CachedSession('.cache', expire_after=3600), retries=3)
-            openmeteo = openmeteo_requests.Client(session=session)
+            cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+            retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+            openmeteo = openmeteo_requests.Client(session=retry_session)
 
+            url = "https://api.open-meteo.com/v1/forecast"
+            params = {
+                "latitude": num1,
+                "longitude": num2,
+                "hourly": ["temperature_2m", "weather_code"],
+                "models": "gfs_global",
+                "current": "temperature_2m",
+                "timezone": "America/Chicago",
+                "minutely_15": "precipitation",
+                "temperature_unit": "fahrenheit",
+            }
 
-            num1 = float(parts[0])
-            num2 = float(parts[1])
-            await message.channel.send(f"You entered: `{num1}` and `{num2}`")
-            
+            responses = openmeteo.weather_api(url, params=params)
+            response = responses[0]
+            current = response.Current()
+            current_temp = current.Variables(0).Value()
+
+            latest_weather_data["location"] = (num1, num2)
+            latest_weather_data["temp"] = current_temp
+
+            await message.channel.send(f"Current temperature at `{num1}, {num2}` is **{current_temp}°F**.")
         except ValueError:
             await message.channel.send("That wasn't a valid floating-point number.")
         except asyncio.TimeoutError:
             await message.channel.send("You took too long to respond.")
+        except Exception as e:
+            await message.channel.send(f"Error: `{e}`")
 
-        with open("weather.py", "r") as f:
-            code = f.read()
-
-# Parse, transform, and write back
-        module = cst.parse_module(code)
-        transformer = ParamUpdater(num1, num2)
-        updated_module = module.visit(transformer)
-
-        if transformer.modified:
-            with open("weather.py", "w") as f:
-                f.write(updated_module.code)
-            print("weather.py successfully updated.")
+    # --- Weather: Reuse last fetched weather info ---
+    elif message.content.strip().lower().startswith("$weather"):
+        if "temp" in latest_weather_data:
+            lat, lon = latest_weather_data["location"]
+            temp = latest_weather_data["temp"]
+            await message.channel.send(f"Latest weather at `{lat}, {lon}`: **{temp}°F**")
         else:
-            print("No changes made to weather.py.")
-                # 🧠 STEP 2: Re-fetch using updated coordinates
-        import openmeteo_requests
-        import requests_cache
-        from retry_requests import retry
+            await message.channel.send("No weather data yet. Use `$setup` first.")
 
-        cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
-        retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
-        openmeteo = openmeteo_requests.Client(session=retry_session)
-
-        url = "https://api.open-meteo.com/v1/forecast"
-        params = {
-        "latitude": num1,
-        "longitude": num2,
-        "hourly": ["temperature_2m", "weather_code"],
-        "models": "gfs_global",
-        "current": "temperature_2m",
-        "timezone": "America/Chicago",
-        "minutely_15": "precipitation",
-        "temperature_unit": "fahrenheit",
-        }
-
-        responses = openmeteo.weather_api(url, params=params)
-        response = responses[0]
-        current = response.Current()
-        current_temp = current.Variables(0).Value()
-
-        await message.channel.send(f"🌡️ Current temperature at `{num1}, {num2}` is **{current_temp}°F**.")
-
-    if message.content.startswith('$weather'):
-        await message.channel.send(f'Weather: {current_temperature_2m}')
-
-    if message.content.startswith('$comment'):
-        if minimum < current_temperature_2m < maximum:
+    elif message.content.startswith('$comment'):
+        if "temp" in latest_weather_data:
+            temp = latest_weather_data["temp"]
+        if minimum < temp < maximum:
             msg_list = ["Thats light stop crying bitch enjoy the windchill.", "Ooooh shiver me timbers shut up man."]
             await message.channel.send(f'{current_temperature_2m}?')
             await message.channel.send(random.choice(msg_list))
             # write an error message here
-        if min2 < current_temperature_2m < max2:
+        if min2 < temp < max2:
             await message.channel.send(f'{current_temperature_2m}?')
             await message.channel.send(f'They must have sent you to the 8th layer of hell with king von holy shit.')
-        if min3 < current_temperature_2m < max3:
+        if min3 < temp < max3:
             await message.channel.send(f'{current_temperature_2m}?')
             await message.channel.send(f'Back in my day me and your mom used to fight 5 lions on our way to school in this weather')
-        if min4 < current_temperature_2m < max4:
+        if min4 < temp < max4:
             msg_list = ["PEAK WEATHER", "Hey bro, is this paradise?", "boi if you dont close discord in 2.48583 seconds", "So ready for the public pool with the nastiest concoctions floating next to me"]
             await message.channel.send(f'{current_temperature_2m}?')
             await message.channel.send(random.choice(msg_list))
-
+    else:
+        await message.channel.send("No weather data yet. Use `$setup` first.")
 client.run(token)

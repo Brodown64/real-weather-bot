@@ -13,7 +13,6 @@ from libcst import parse_expression
 import libcst.matchers as m
 
 # update
-# prompt ideas: "I rather live in New Jersey bossman 😭🙏"
 # on typing event: GET OFF DISCORD DAWG GO OUTSIDE, HURRY UP AND LEAVE DAMN, STOP WRITING AN ESSAY, the wii take a break image
 # facts about weather, post history on weather disasters
 # count how many times people chat in the server, and make a I haven't touched grass leaderboard and add some roles
@@ -184,8 +183,9 @@ async def on_message(message):
             await message.channel.send(random.choice(msg_list))
             # write an error message here
         if min2 < temp < max2:
+            msg_list = ["They must have sent you to the 8th layer of hell with king von holy shit.", "I rather live in New Jersey bossman 😭🙏"]
             await message.channel.send(f'{current_temperature_2m}?')
-            await message.channel.send(f'They must have sent you to the 8th layer of hell with king von holy shit.')
+            await message.channel.send(random.choice(msg_list))
         if min3 < temp < max3:
             await message.channel.send(f'{current_temperature_2m}?')
             await message.channel.send(f'Back in my day me and your mom used to fight 5 lions on our way to school in this weather')
@@ -195,4 +195,21 @@ async def on_message(message):
             await message.channel.send(random.choice(msg_list))
     else:
         await message.channel.send("No weather data yet. Use `$setup` first.")
+
+@client.event
+async def on_typing(channel, user, when):
+    if user == client.user:
+        return
+
+    msg_list = ["GET OFF DISCORD DAWG GO OUTSIDE", "HURRY UP AND LEAVE DAMN", "STOP WRITING AN ESSAY"]
+
+    print(f"{user} is typing message in {channel} {when}")
+
+    if random.random() < 0.5:
+        await channel.send(random.choice(msg_list))
+    else:
+        # Send random image
+        img = discord.File("wii.png")
+        await channel.send(file=img)
+
 client.run(token)
